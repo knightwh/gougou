@@ -8,11 +8,7 @@
 
 using namespace std;
 
-TRECParser::TRECParser(string filename) {
-  TRECParser(filename.c_str());
-}
-
-TRECParser::TRECParser(char* filename) {
+Parser::Parser(char* filename) {
   file_handle_.open(filename);
   if (!file_handle_.is_open()) {
     cerr<<"Could not read the raw data file "<<filename<<" in the parser"<<endl;
@@ -61,5 +57,64 @@ bool TRECParser::NextDocument() {
   if (state >= 0) return false;
   else return true;
 }
-  
+
+bool SimpleHTMLParser::NextDocument() {
+  if (!file_handle_.is_open()) return false;
+  cur_document_.terms.clear();
+  int state = 0;
+  string line;
+  const string valid_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                            "abcdefghijklmnopqrstuvwxyz"
+                            "0123456789-_";
+  while(getline(file_handle_,line) && state >= 0) {
+    switch(state) {
+      case 0:
+        size_t begin_pos, end_pos;
+        if (((begin_pos = line.find("<DOCNO>"))!=string::npos) &&
+            ((end_pos = line.find("</DOCNO>"))!=string::npos)) {
+          begin_pos += strlen("<DOCNO>");
+          while (line[begin_pos]==' ') begin_pos++;
+          while (line[end_pos-1]==' ') end_pos--;
+          cur_document_.doc_name = line.substr(begin_pos,end_pos-begin_pos);
+          state = 1;
+        }
+        break;
+      case 1:
+        if (line.substr(0,strlen("<DOCHDR>")) == "<DOCHDR>") {
+          state = 100;
+          break;
+        } else if(line.substr(0,strlen("</DOC>")) == "</DOC>") {
+          state = -1;
+          break;
+        }
+        line += "\n";
+        begin_pos = 0;
+        while(begin_pos < line.length()) {
+          end_pos = line.find_first_not_of(valid_char,begin_pos);
+          if (end_pos == string::npos) break;
+          if (end_pos - begin_pos > 0) {
+            cur_document_.terms.push_back(line.substr(begin_pos,end_pos-begin_pos));
+            begin_pos = end_pos + 1;
+          } else begin_pos++;
+          if (line[end_pos] == '<') {
+            begin_pos = line.find_first_of('>',end_pos);
+            if (begin_pos == string::npos) begin_pos = end_pos + 1;
+            else begin_pos++;
+          }
+        }
+        break;
+      case 100:
+        if (line.substr(0,strlen("</DOCHDR>")) == "</DOCHDR>") {
+          state = 1;
+        }
+        break;
+       default: {
+        state = -1;
+      }
+    }
+  }
+  if (state >= 0) return false;
+  else return true;
+}
+          
  

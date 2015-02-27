@@ -49,7 +49,7 @@ IndexBuilderBase::~IndexBuilderBase() {
 }
 
 void IndexBuilderBase::BuildIndex(char* text_file) {
-  TRECParser* parser = new TRECParser(text_file);
+  SimpleHTMLParser* parser = new SimpleHTMLParser(text_file);
   while (parser->NextDocument()) {
     //IndexCurDocument(tf_generator->GetTF(parser->CurrentDocument()));
     IndexCurDocument(parser->CurrentDocument());
