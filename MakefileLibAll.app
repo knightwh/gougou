@@ -1,4 +1,4 @@
-LIBLIST=DAM DAMreader DiskBuffer DiskBufferReader DiskItem DiskItemReader DiskMultiItem DiskMultiItemReader DiskContentReader DocNameLookup DocumentTFGenerator IndexBuilderBase IndexBuilder IndexReaderBase InvertIndexBuilder InvertIndexReader Parser PForCompressor PForDecompressor porter PrefixTree PrefixTreeReader TermMeta TermNameLookup NameLookup NameLookupReader VectorInfo VectorInfoReader
+LIBLIST=DAM DAMreader DiskBuffer DiskBufferReader DiskItem DiskItemReader DiskMultiItem DiskMultiItemReader DiskContentReader DocNameLookup DocumentTFGenerator IndexBuilderBase IndexBuilder IndexReaderBase InvertIndexBuilder InvertIndexReader Parser PForCompressor PForDecompressor porter PrefixTree PrefixTreeBuilder PrefixTreeReader TermMeta TermNameLookup NameLookup NameLookupReader VectorInfo VectorInfoReader
 INC=./include
 SRCPATH=./src
 LIBPATH=./lib

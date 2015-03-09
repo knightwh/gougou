@@ -1,20 +1,18 @@
-#include <iostream>
-
-#include "IndexBuilderBase.hpp"
+#include "IndexBuilder.hpp"
 
 using namespace std;
 
-int main(int argc, char** argv) {
-  if(argc != 3) {
-    cerr<<"Usage: "<<argv[0]<<" dataPath indexPath\n";
+int main(int argc,char** argv) {
+  if (argc < 2) {
+    cerr<<"Usage: "<<argv[0]<<" paraFile1 paraFile2 ..."<<endl;
     return 0;
   }
-  IndexBuilderBase* IBB=new IndexBuilderBase(argv[2]);
-  IBB->BuildIndex(argv[1]);
-  cout<<"...Finalize the job!"<<endl;
-  IBB->Finalize();
-  cout<<"Done!"<<endl;
-  delete IBB;
-  
+  IndexBuilder* IB = new IndexBuilder();
+  for(unsigned i=1; i < argc; i++) {
+    IB->ProcessFile(argv[i]);
+  }
+  IB->BuildIndex();
+  delete IB;
   return 0;
+  
 }
