@@ -1,4 +1,4 @@
-APP=IndexBuilderBase
+APP=JoinTest_InvertBuilder_InvertReader
 SRC=code/$(APP).cpp
 OBJ=bin/$(APP)
 

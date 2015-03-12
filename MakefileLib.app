@@ -1,4 +1,4 @@
-APP=SimpleStatReader
+APP=InvertIndexBuilder
 SRC=src/$(APP).cpp
 OBJ=lib/$(APP).o
 

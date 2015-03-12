@@ -15,7 +15,7 @@ using namespace std;
 int main(int argc, char** argv) {
   srand ( unsigned ( std::time(0) ) );
   vector<vector<Posting> > res;
-  InvertIndexBuilder* IIB = new InvertIndexBuilder("invert_temp");
+  InvertIndexBuilder* IIB = new InvertIndexBuilder("../../gougou_test/invert_temp");
   cout << "OK" <<endl;
   vector<unsigned> cur_docID;
   for(unsigned i=0; i<TEST_SIZE; i++) {
@@ -34,11 +34,11 @@ int main(int argc, char** argv) {
     res[termID].push_back(p);
     IIB->PushPosting(termID,p);
   }
-  IIB->Finalize("invert_summary","invert_body");
+  IIB->Finalize("../../gougou_test/invert_summary","../../gougou_test/invert_body");
   delete IIB;
 
   // Begin test the index reader.
-  InvertIndexReader* IIR = new InvertIndexReader("invert_summary","invert_body");
+  InvertIndexReader* IIR = new InvertIndexReader("../../gougou_test/invert_summary","../../gougou_test/invert_body");
   for (unsigned i=1; i<res.size(); i++) {
     PostingListReader* PLR = IIR->GetPosting(i);
     if (res[i].size() != PLR->GetSummary().df) cout<< res[i].size() << " VS " << PLR->GetSummary().df << endl;

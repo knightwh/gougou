@@ -33,43 +33,53 @@ void InvertIndexBuilder::Finalize(char* term_path, char* invert_path) {
     TermMeta* term_data = term_meta_->GetTermMeta(i);
     summary->df = term_data->GetDF();
     summary->tf = term_data->GetTF();
-    summary->block_num = term_data->GetBlock().size();
+    summary->block_num = term_data->GetBlockNum();
     summary->address = invert_DAM->getItemCounter();
     // Fill up the block information part of invert index.
-    const vector<TermMetaBlock>& blocks = term_data->GetBlock();
-    DiskMultiItem* items = invert_DAM->AddMultiNewItem(blocks.size()*sizeof(BlockSummaryForInvert)/sizeof(unsigned));
-    for (unsigned l=0; l<blocks.size(); l++) {
+    TermMetaIterator* it = term_data->GetBlockIterator();
+    //const vector<TermMetaBlock>& blocks = term_data->GetBlock();
+    DiskMultiItem* items = invert_DAM->AddMultiNewItem(term_data->GetBlockNum()*sizeof(BlockSummaryForInvert)/sizeof(unsigned));
+    //for (unsigned l=0; l<blocks.size(); l++) {
+    unsigned offset = 0;
+    while(it->Next()) {
+      TermMetaBlock block = it->Current();
       BlockSummaryForInvert block_summary;
-      block_summary.a1 = blocks[l].a1;
-      block_summary.b1 = blocks[l].b1;
-      block_summary.length1 = blocks[l].length1;
-      block_summary.a2 = blocks[l].a2;
-      block_summary.b2 = blocks[l].b2;
-      block_summary.length2 = blocks[l].length2;
-      block_summary.docID = blocks[l].docID;
-      items->MemcpyIn((char*)&block_summary,l*sizeof(BlockSummaryForInvert)/sizeof(unsigned),sizeof(BlockSummaryForInvert)/sizeof(unsigned));
+      block_summary.a1 = block.a1;
+      block_summary.b1 = block.b1;
+      block_summary.length1 = block.length1;
+      block_summary.a2 = block.a2;
+      block_summary.b2 = block.b2;
+      block_summary.length2 = block.length2;
+      block_summary.docID = block.docID;
+      items->MemcpyIn((char*)&block_summary,offset,sizeof(BlockSummaryForInvert)/sizeof(unsigned));
+      offset += sizeof(BlockSummaryForInvert)/sizeof(unsigned);
     }
     delete items;
+    delete it;
     // Fill up the main body of invert index.
-    for (unsigned l=0; l<blocks.size(); l++) {
-      items = invert_DAM->AddMultiNewItem(blocks[l].length1);
-      DiskMultiItem* source_items = term_meta_->GetDAM()->LocalMultiItem(blocks[l].address1,blocks[l].length1);
-      unsigned temp1[blocks[l].length1];
-      source_items->MemcpyOut((char*)temp1,0,blocks[l].length1);
-      items->MemcpyIn((char*)temp1,0,blocks[l].length1);
+    it = term_data->GetBlockIterator();
+    //for (unsigned l=0; l<blocks.size(); l++) {
+    while(it->Next()) {
+      TermMetaBlock block = it->Current();
+      items = invert_DAM->AddMultiNewItem(block.length1);
+      DiskMultiItem* source_items = term_meta_->GetDAM()->LocalMultiItem(block.address1,block.length1);
+      unsigned temp1[block.length1];
+      source_items->MemcpyOut((char*)temp1,0,block.length1);
+      items->MemcpyIn((char*)temp1,0,block.length1);
       delete items;
       delete source_items;
-      items = invert_DAM->AddMultiNewItem(blocks[l].length2);
-      source_items = term_meta_->GetDAM()->LocalMultiItem(blocks[l].address2,blocks[l].length2);
-      unsigned temp2[blocks[l].length2];
-      source_items->MemcpyOut((char*)temp2,0,blocks[l].length2);
+      items = invert_DAM->AddMultiNewItem(block.length2);
+      source_items = term_meta_->GetDAM()->LocalMultiItem(block.address1+block.length1,block.length2);
+      unsigned temp2[block.length2];
+      source_items->MemcpyOut((char*)temp2,0,block.length2);
 
-      items->MemcpyIn((char*)temp2,0,blocks[l].length2);
+      items->MemcpyIn((char*)temp2,0,block.length2);
       delete items;
       delete source_items;
     }
     summary->data_length = invert_DAM->getItemCounter() - summary->address;
     delete DI;
+    delete it;
   }
   delete invert_DAM;
   delete term_DAM;

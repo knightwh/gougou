@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#define TEST_SIZE 1000000
-#define TERM_SIZE 1000
+#define TEST_SIZE 100000
+#define TERM_SIZE 100
 
 #include "Posting.hpp"
 #include "PForDecompressor.hpp"
@@ -16,7 +16,7 @@ int main(int argc,char** argv) {
   srand ( unsigned ( std::time(0) ) );
   vector<vector<Posting> > res;
   PForDecompressor* PFD = new PForDecompressor();
-  TermMetaManager* TMM = new TermMetaManager("TermMeta_temp");
+  TermMetaManager* TMM = new TermMetaManager("../../gougou_test/TermMeta_temp");
   cout << "OK" <<endl;
   vector<unsigned> cur_docID;
   for(unsigned i=0; i<TEST_SIZE; i++) {
@@ -41,30 +41,33 @@ int main(int argc,char** argv) {
   for (unsigned i=0; i<res.size(); i++) {
     TermMeta* term_data = TMM->GetTermMeta(i);
     if (res[i].size() != term_data->GetDF()) cout << i << ":" << res[i].size() << " vs " << term_data->GetDF() << endl;
-    vector<TermMetaBlock>::const_iterator it;
+    TermMetaIterator* it = term_data->GetBlockIterator();
     unsigned num = 0;
     unsigned docID[COMPRESSOR_BLOCK_SIZE*2] = {};
     unsigned tf[COMPRESSOR_BLOCK_SIZE*2];
     unsigned data1[COMPRESSOR_BLOCK_SIZE*2];
     unsigned data2[COMPRESSOR_BLOCK_SIZE*2];
-    for (it = term_data->GetBlock().begin(); it != term_data->GetBlock().end(); it++) {
+    //for (it = term_data->GetBlock().begin(); it != term_data->GetBlock().end(); it++) {
+    while(it->Next()) {
       unsigned item_num = COMPRESSOR_BLOCK_SIZE;
-      if (it+1 == term_data->GetBlock().end()) {
+      //if (it+1 == term_data->GetBlock().end()) {
+      if(!it->HasMore()) {
         item_num = term_data->GetDF() % COMPRESSOR_BLOCK_SIZE;
         if (item_num == 0) item_num = COMPRESSOR_BLOCK_SIZE;
       }
-      DiskMultiItem* items = TMM->GetDAM()->LocalMultiItem(it->address1,it->length1);
-      items -> MemcpyOut((char*)data1,0,it->length1);
+      TermMetaBlock block = it->Current();
+      DiskMultiItem* items = TMM->GetDAM()->LocalMultiItem(block.address1,block.length1);
+      items -> MemcpyOut((char*)data1,0,block.length1);
       delete items;
-      items = TMM->GetDAM()->LocalMultiItem(it->address2,it->length2);
-      items -> MemcpyOut((char*)data2,0,it->length2);
+      items = TMM->GetDAM()->LocalMultiItem(block.address1+block.length1,block.length2);
+      items -> MemcpyOut((char*)data2,0,block.length2);
       delete items;
-      PFD->Decompress(it->a1,it->b1,item_num,data1,it->length1,docID);
-      docID[0] += it->docID;
+      PFD->Decompress(block.a1,block.b1,item_num,data1,block.length1,docID);
+      docID[0] += block.docID;
       for (unsigned l = 1; l<item_num; l++) {
         docID[l] += docID[l-1] + 1;
       }
-      PFD->Decompress(it->a2,it->b2,item_num,data2,it->length2,tf);
+      PFD->Decompress(block.a2,block.b2,item_num,data2,block.length2,tf);
       for (unsigned l = 0; l<item_num; l++) tf[l]++;
       for (unsigned l = 0; l<item_num; l++) {
         if(res[i][num].docID != docID[l]) cout<<"DocID " << i << ":" << num << ":\t" << res[i][num].docID << " vs " << docID[l] <<endl;
@@ -72,6 +75,7 @@ int main(int argc,char** argv) {
         num++;
       }
     }
+    delete it;
   }
   delete TMM;
   delete PFD;

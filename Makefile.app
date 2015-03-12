@@ -1,4 +1,4 @@
-APP=retrieval
+APP=BuildIndex
 SRC=code/$(APP).cpp
 OBJ=bin/$(APP)
 
