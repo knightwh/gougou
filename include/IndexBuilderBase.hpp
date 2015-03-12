@@ -7,8 +7,8 @@
 #include "NameLookup.hpp"
 #include "Parser.hpp"
 #include "porter.hpp"
-//#include "PrefixTree.hpp"
-#include "PrefixTreeBuilder.hpp"
+#include "PrefixTree.hpp"
+//#include "PrefixTreeBuilder.hpp"
 #include "SimpleStatBuilder.hpp"
 #include "TermMeta.hpp"
 #include "VectorInfo.hpp"
@@ -27,8 +27,8 @@ class IndexBuilderBase {
   unsigned LookupTerm(const string& s);
  private:
   InvertIndexBuilder* invert_index_;
-  PrefixTreeBuilder* term_lookup_;
-  //PrefixTree* term_lookup_;
+  //PrefixTreeBuilder* term_lookup_;
+  PrefixTree* term_lookup_;
   DocumentTFGenerator* tf_generator_;
   NameLookup* term_name_;
   NameLookup* doc_name_;

@@ -65,11 +65,11 @@ bool SimpleHTMLParser::NextDocument() {
   string line;
   const string valid_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             "abcdefghijklmnopqrstuvwxyz"
-                            "0123456789-_";
+                            "0123456789";
   while(getline(file_handle_,line) && state >= 0) {
+    size_t begin_pos, end_pos;
     switch(state) {
       case 0:
-        size_t begin_pos, end_pos;
         if (((begin_pos = line.find("<DOCNO>"))!=string::npos) &&
             ((end_pos = line.find("</DOCNO>"))!=string::npos)) {
           begin_pos += strlen("<DOCNO>");
@@ -93,14 +93,14 @@ bool SimpleHTMLParser::NextDocument() {
           end_pos = line.find_first_not_of(valid_char,begin_pos);
           if (end_pos == string::npos) break;
           if (end_pos - begin_pos > 0) {
-            cur_document_.terms.push_back(line.substr(begin_pos,end_pos-begin_pos));
-            begin_pos = end_pos + 1;
+            string term = line.substr(begin_pos,end_pos-begin_pos);
+            if(term.length() < 64) cur_document_.terms.push_back(term);
+            if (line[end_pos] == '<') {
+              begin_pos = line.find_first_of('>',end_pos);
+              if (begin_pos == string::npos) begin_pos = end_pos + 1;
+              else begin_pos++;
+            } else begin_pos = end_pos + 1;
           } else begin_pos++;
-          if (line[end_pos] == '<') {
-            begin_pos = line.find_first_of('>',end_pos);
-            if (begin_pos == string::npos) begin_pos = end_pos + 1;
-            else begin_pos++;
-          }
         }
         break;
       case 100:

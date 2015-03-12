@@ -14,11 +14,11 @@ IndexBuilderBase::IndexBuilderBase(char* p) {
   strcpy(temp_path,path_);
   strcat(temp_path,"/invert_temp");
   invert_index_ = new InvertIndexBuilder(temp_path);
-  //term_lookup_ = new PrefixTree();
+  term_lookup_ = new PrefixTree();
   char prefix_tree_temp_path[256];
   strcpy(prefix_tree_temp_path,path_);
   strcat(prefix_tree_temp_path,"/prefix_tree_temp");
-  term_lookup_ = new PrefixTreeBuilder(prefix_tree_temp_path);
+  //term_lookup_ = new PrefixTreeBuilder(prefix_tree_temp_path);
   tf_generator_ = new DocumentTFGenerator();
   char term_name_path[256];
   strcpy(term_name_path,path_);
