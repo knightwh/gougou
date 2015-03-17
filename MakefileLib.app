@@ -1,4 +1,4 @@
-APP=InvertIndexBuilder
+APP=TermMeta
 SRC=src/$(APP).cpp
 OBJ=lib/$(APP).o
 

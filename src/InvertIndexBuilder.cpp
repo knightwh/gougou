@@ -30,15 +30,18 @@ void InvertIndexBuilder::Finalize(char* term_path, char* invert_path) {
     // Fill up the term summary part.
     DI = term_DAM->addNewItem();
     TermSummaryForInvert* summary = (TermSummaryForInvert*)DI->content;
-    TermMeta* term_data = term_meta_->GetTermMeta(i);
-    summary->df = term_data->GetDF();
-    summary->tf = term_data->GetTF();
-    summary->block_num = term_data->GetBlockNum();
+    DiskItem* meta_item = term_meta_->GetTermMeta(i);
+    TermMeta* meta = (TermMeta*)meta_item->content;
+    //TermMeta* term_data = term_meta_->GetTermMeta(i);
+    summary->df = meta->df;
+    summary->tf = meta->tf;
+    summary->block_num = term_meta_->GetBlockNum(i);
     summary->address = invert_DAM->getItemCounter();
+    delete meta_item;
     // Fill up the block information part of invert index.
-    TermMetaIterator* it = term_data->GetBlockIterator();
+    TermMetaIterator* it = term_meta_->GetBlockIterator(i);
     //const vector<TermMetaBlock>& blocks = term_data->GetBlock();
-    DiskMultiItem* items = invert_DAM->AddMultiNewItem(term_data->GetBlockNum()*sizeof(BlockSummaryForInvert)/sizeof(unsigned));
+    DiskMultiItem* items = invert_DAM->AddMultiNewItem(summary->block_num*sizeof(BlockSummaryForInvert)/sizeof(unsigned));
     //for (unsigned l=0; l<blocks.size(); l++) {
     unsigned offset = 0;
     while(it->Next()) {
@@ -57,7 +60,7 @@ void InvertIndexBuilder::Finalize(char* term_path, char* invert_path) {
     delete items;
     delete it;
     // Fill up the main body of invert index.
-    it = term_data->GetBlockIterator();
+    it = term_meta_->GetBlockIterator(i);
     //for (unsigned l=0; l<blocks.size(); l++) {
     while(it->Next()) {
       TermMetaBlock block = it->Current();

@@ -39,9 +39,10 @@ int main(int argc,char** argv) {
   // Check the res;
   cout << "Begin test the result" <<endl;
   for (unsigned i=0; i<res.size(); i++) {
-    TermMeta* term_data = TMM->GetTermMeta(i);
-    if (res[i].size() != term_data->GetDF()) cout << i << ":" << res[i].size() << " vs " << term_data->GetDF() << endl;
-    TermMetaIterator* it = term_data->GetBlockIterator();
+    DiskItem* meta_item = TMM->GetTermMeta(i);
+    TermMeta* term_data = (TermMeta*)meta_item->content;
+    if (res[i].size() != term_data->df) cout << i << ":" << res[i].size() << " vs " << term_data->df << endl;
+    TermMetaIterator* it = TMM->GetBlockIterator(i);
     unsigned num = 0;
     unsigned docID[COMPRESSOR_BLOCK_SIZE*2] = {};
     unsigned tf[COMPRESSOR_BLOCK_SIZE*2];
@@ -52,7 +53,7 @@ int main(int argc,char** argv) {
       unsigned item_num = COMPRESSOR_BLOCK_SIZE;
       //if (it+1 == term_data->GetBlock().end()) {
       if(!it->HasMore()) {
-        item_num = term_data->GetDF() % COMPRESSOR_BLOCK_SIZE;
+        item_num = term_data->df % COMPRESSOR_BLOCK_SIZE;
         if (item_num == 0) item_num = COMPRESSOR_BLOCK_SIZE;
       }
       TermMetaBlock block = it->Current();
@@ -76,6 +77,7 @@ int main(int argc,char** argv) {
       }
     }
     delete it;
+    delete meta_item;
   }
   delete TMM;
   delete PFD;

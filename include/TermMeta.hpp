@@ -7,7 +7,8 @@
 #include "Posting.hpp"
 #include "PForCompressor.hpp"
 
-#define TERM_META_BLOCK_ADDRESS_SIZE 4
+#define TERM_META_BLOCK_ADDRESS_BASE_SIZE 4
+#define TERM_META_BLOCK_META_SIZE 20
 
 using namespace std;
 
@@ -20,7 +21,19 @@ struct TermMetaBlock {
   unsigned length2 : 8;
   unsigned docID;
   uint64_t address1;
-  //uint64_t address2;
+};
+
+struct TermMeta {
+  unsigned char block_size;
+  unsigned char temp_size;
+  unsigned capcity;
+  unsigned usage;
+  unsigned cur_docID;
+  unsigned df;
+  uint64_t tf;
+  uint64_t blocks[TERM_META_BLOCK_META_SIZE];
+  unsigned temp_docID[COMPRESS_BLOCK_SIZE];
+  unsigned temp_tf[COMPRESS_BLOCK_SIZE];
 };
 
 class TermMetaIterator {
@@ -54,85 +67,33 @@ private:
   DiskMultiItem* items_;
 };
 
-
-class TermMeta {
-public:
-  TermMeta(DiskAsMemory* block_DAM) {
-    tf_ = 0;
-    df_ = 0;
-    cur_docID_ = 0;
-    capcity_ = 0;
-    usage_ = 0;
-    temp_size_ = 0;
-    block_DAM_ = block_DAM;
-    items_ = NULL;
-  };
-  inline bool PushPosting(Posting p) {
-    if (temp_size_ >= COMPRESS_BLOCK_SIZE) return false;
-    temp_docID_[temp_size_] = p.docID;
-    temp_tf_[temp_size_] = p.tf;
-    temp_size_++;
-    df_++;
-    tf_+=p.tf;
-    return true;
-  }
-  inline bool TempPostingFull() const {return (temp_size_ >= COMPRESS_BLOCK_SIZE);}
-  inline bool TempPostingEmpty() const {return temp_size_ == 0;}
-  //inline const vector<TermMetaBlock>& GetBlock() {return blocks;}
-  TermMetaIterator* GetBlockIterator() const {
-    return new TermMetaIterator(block_address_, block_DAM_,usage_);
-  }
-  inline const unsigned* GetTempDocID() const {return temp_docID_;}
-  inline const unsigned* GetTempTF() const {return temp_tf_;}
-  inline unsigned GetTempSize() const {return temp_size_;}
-  inline unsigned GetDF() const {return df_;}
-  inline unsigned GetTF() const {return tf_;}
-  void AddBlock(const TermMetaBlock& b);
-  unsigned GetBlockNum() const;
-  void ClearTempPosting() {temp_size_ = 0;}
-  inline unsigned GetCurDocID() const { return cur_docID_;}
-  inline void SetCurDocID(unsigned docID) { cur_docID_ = docID;}
-  ~TermMeta() {
-    if(items_ != NULL) delete items_;
-  }
-private:
-  //vector<TermMetaBlock> blocks;
-  vector<uint64_t> block_address_;
-  unsigned capcity_;
-  unsigned usage_;
-  unsigned temp_docID_[COMPRESS_BLOCK_SIZE];
-  unsigned temp_tf_[COMPRESS_BLOCK_SIZE];
-  unsigned temp_size_;
-  unsigned cur_docID_;
-  unsigned df_;
-  uint64_t tf_;
-  DiskAsMemory* block_DAM_;
-  DiskMultiItem* items_;
-};
-
 class TermMetaManager {
  public:
   TermMetaManager(char* p);
   void PushPosting(unsigned t, Posting p);
   void Finalize();
   vector<pair<unsigned,unsigned> > GetBlockCount() const;
-  inline TermMeta* GetTermMeta(unsigned t) {return terms_[t];}
-  inline unsigned GetTermSize() {return terms_.size();}
+  unsigned GetBlockNum(unsigned i) const;
+  inline DiskItem* GetTermMeta(unsigned t) {
+    return meta_DAM_->localItem(t);
+  }
+  inline unsigned GetTermSize() {return meta_DAM_->getItemCounter();}
   inline uint64_t GetTotalTF() {return totalTF_;}
-  inline DiskAsMemory* GetDAM() {return DAM_;}
+  inline DiskAsMemory* GetDAM() const { return DAM_;}
+  TermMetaIterator* GetBlockIterator(unsigned t);
   ~TermMetaManager();
  protected:
-  void AddBlock(unsigned t,const PForBlock& b1,const PForBlock& b2);
-  PForBlock CompressDocID(unsigned t);
-  PForBlock CompressTF(unsigned t);
+  TermMetaBlock CombineBlock(const PForBlock& b1,const PForBlock& b2);
+  void AddTerm();
+  PForBlock CompressDocID(unsigned doc[], unsigned cur_docID, unsigned length);
+  PForBlock CompressTF(unsigned tf[],unsigned length);
+  void PushPosting(TermMeta* meta, Posting p);
  private:
+  DiskAsMemory* meta_DAM_;
   DiskAsMemory* block_DAM_;
   DiskAsMemory* DAM_;
-  vector<TermMeta*> terms_;
   PForCompressor* compressor_;
-  uint64_t item_counter_;
   uint64_t totalTF_;
 };
-   
   
 #endif
