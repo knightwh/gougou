@@ -9,6 +9,7 @@
 #include "porter.hpp"
 #include "PrefixTree.hpp"
 //#include "PrefixTreeBuilder.hpp"
+//#include "PrefixTreeMix.hpp"
 #include "SimpleStatBuilder.hpp"
 #include "TermMeta.hpp"
 #include "VectorInfo.hpp"

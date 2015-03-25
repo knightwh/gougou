@@ -1,7 +1,8 @@
 #include <iostream>
 #include <map>
 
-#include "PrefixTree.hpp"
+//#include "PrefixTree.hpp"
+#include "PrefixTreeMix.hpp"
 #include "PrefixTreeReader.hpp"
 #include "Parser.hpp"
 #include "DocumentTFGenerator.hpp"
@@ -10,10 +11,11 @@ using namespace std;
 
 int main(int argc,char** argv) {
   map<string,unsigned> res;
-  //TRECParser* parser = new TRECParser("/infolab/infolab0/haowu/trec-collections/data/doe.trec");
-  TRECParser* parser = new TRECParser("data/test_collection");
+  TRECParser* parser = new TRECParser("/infolab/infolab0/haowu/trec-collections/data/doe.trec");
+  //TRECParser* parser = new TRECParser("data/test_collection");
   DocumentTFGenerator *TF_generator = new DocumentTFGenerator();
-  PrefixTree *PT = new PrefixTree();
+  //PrefixTree *PT = new PrefixTree();
+  PrefixTreeMix *PT = new PrefixTreeMix("../../gougou_test/tree_test");
   while(parser->NextDocument()) {
     DocumentTF TF_info = TF_generator->GetTF(parser->CurrentDocument());
     //cout<<TF_info.doc_name<<endl;
@@ -23,6 +25,8 @@ int main(int argc,char** argv) {
       termID = PT->LookupTerm(it->first.c_str());
       if(termID == 0) {
         termID = PT->InsertTerm(it->first);
+        //termID = PT->InsertTerm("ab");
+        if (termID % 500 == 0) cout<<termID<<endl;
       }
       //cout<<it->first<<"\t"<<it->second<<"\t"<<termID<<endl;
       res.insert(pair<string,unsigned>(it->first,termID));

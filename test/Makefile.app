@@ -1,4 +1,4 @@
-APP=JoinTest_InvertBuilder_InvertReader
+APP=PrefixTree_test
 SRC=code/$(APP).cpp
 OBJ=bin/$(APP)
 

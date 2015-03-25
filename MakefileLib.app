@@ -1,4 +1,4 @@
-APP=TermMeta
+APP=PrefixTreeMix
 SRC=src/$(APP).cpp
 OBJ=lib/$(APP).o
 

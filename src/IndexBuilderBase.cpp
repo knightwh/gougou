@@ -19,6 +19,7 @@ IndexBuilderBase::IndexBuilderBase(char* p) {
   strcpy(prefix_tree_temp_path,path_);
   strcat(prefix_tree_temp_path,"/prefix_tree_temp");
   //term_lookup_ = new PrefixTreeBuilder(prefix_tree_temp_path);
+  //term_lookup_ = new PrefixTreeMix(prefix_tree_temp_path);
   tf_generator_ = new DocumentTFGenerator();
   char term_name_path[256];
   strcpy(term_name_path,path_);
@@ -57,7 +58,7 @@ void IndexBuilderBase::BuildIndex(char* text_file) {
   while (parser->NextDocument()) {
     //IndexCurDocument(tf_generator->GetTF(parser->CurrentDocument()));
     IndexCurDocument(parser->CurrentDocument());
-    if (docID_%500 == 0) ShowProcess();
+    if (docID_%100 == 0) ShowProcess();
   }
   delete parser;
 }
